@@ -21,58 +21,85 @@ def adaptive_ai(player_history):
 
 def determine_winner(player, computer):
     if player == computer:
-        return "It's a draw!"
+        return "draw"
     elif (player == "rock" and computer == "scissors") or \
          (player == "scissors" and computer == "paper") or \
          (player == "paper" and computer == "rock"):
-        return "You win!"
+        return "win"
     else:
-        return "Computer wins!"
+        return "loss"
 
 # Initialize session state
 if "player_history" not in st.session_state:
     st.session_state.player_history = []
 
-if "result" not in st.session_state:
-    st.session_state.result = ""
+if "computer_history" not in st.session_state:
+    st.session_state.computer_history = []
 
-if "computer_move" not in st.session_state:
-    st.session_state.computer_move = ""
+if "results" not in st.session_state:
+    st.session_state.results = []
 
 # Title
 st.title("🪨📄✂️ Rock-Paper-Scissors with Adaptive AI")
 
-# Instructions
 st.write("Choose your move:")
 
 # UI Buttons
 col1, col2, col3 = st.columns(3)
+move = None
 with col1:
     if st.button("🪨 Rock"):
         move = "rock"
-elif_selected = True
 with col2:
     if st.button("📄 Paper"):
         move = "paper"
-        elif_selected = True
 with col3:
     if st.button("✂️ Scissors"):
         move = "scissors"
-        elif_selected = True
 
 # Game logic
-if 'move' in locals():
+if move:
     st.session_state.player_history.append(move)
-    st.session_state.computer_move = adaptive_ai(st.session_state.player_history)
-    st.session_state.result = determine_winner(move, st.session_state.computer_move)
+    computer_move = adaptive_ai(st.session_state.player_history)
+    st.session_state.computer_history.append(computer_move)
+    
+    result = determine_winner(move, computer_move)
+    st.session_state.results.append(result)
 
-# Display result
-if st.session_state.result:
+    # Display round result
     st.markdown("---")
-    st.subheader("Result:")
-    st.write(f"**You played:** {st.session_state.player_history[-1]}")
-    st.write(f"**Computer played:** {st.session_state.computer_move}")
-    st.success(st.session_state.result)
+    st.subheader("🎯 Round Result")
+    st.write(f"**You played:** {move}")
+    st.write(f"**Computer played:** {computer_move}")
+    
+    if result == "win":
+        st.success("✅ You win!")
+    elif result == "loss":
+        st.error("❌ Computer wins!")
+    else:
+        st.info("🤝 It's a draw!")
+
+# Show result stats
+if st.session_state.results:
+    st.markdown("---")
+    st.subheader("📊 Game Stats")
+
+    total = len(st.session_state.results)
+    wins = st.session_state.results.count("win")
+    losses = st.session_state.results.count("loss")
+    draws = st.session_state.results.count("draw")
+
+    win_pct = wins / total * 100
+    loss_pct = losses / total * 100
+    draw_pct = draws / total * 100
+
+    st.write(f"**Total Rounds:** {total}")
+
+    st.table({
+        "Result": ["Wins", "Losses", "Draws"],
+        "Count": [wins, losses, draws],
+        "Percent": [f"{win_pct:.1f}%", f"{loss_pct:.1f}%", f"{draw_pct:.1f}%"]
+    })
 
 # History
 if st.session_state.player_history:
@@ -83,6 +110,6 @@ if st.session_state.player_history:
 # Reset button
 if st.button("🔄 Reset Game"):
     st.session_state.player_history = []
-    st.session_state.result = ""
-    st.session_state.computer_move = ""
+    st.session_state.computer_history = []
+    st.session_state.results = []
     st.experimental_rerun()
